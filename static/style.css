@@ -4,17 +4,6 @@ body {
   background: #f1f1f1;
 }
 
-/* Header/Blog Title */
-.header {
-  padding: 30px;
-  font-size: 40px;
-  text-align: center;
-  background: white;
-}
-
-.header img{
-  width: 20%;
-}
 
 /* Create two unequal columns that floats next to each other */
 /* Left column */
@@ -70,6 +59,11 @@ body {
   border-radius: 6px;
   margin-right: 20px;
   font-size: 24px;
+}
+
+#login{
+  margin-top: 30px;
+  margin-bottom: 70px;
 }
 
 /* Responsive layout - when the screen is less than 800px wide, make the two columns stack on top of each other instead of next to each other */

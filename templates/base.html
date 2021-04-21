@@ -1,0 +1,24 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>The Python Programming Blog</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+
+    <div class="header">
+        <img src="../static/python2.png" alt="gif">
+        <div class="text">
+            <h2>The Python Programming Blog</h2>
+        </div>
+    </div>
+</head>
+   <body>
+    {% block content %}
+    {% endblock %}
+   </body>
+<footer>
+    <div class="footer">
+        <h2>Business Email: thePythonBlog@gmail.com</h2>
+    </div>
+</footer>
+</html>
