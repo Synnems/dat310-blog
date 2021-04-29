@@ -1,7 +1,14 @@
-{% extends 'base.html' %}
-
-{% block content %}
-
+<script src="https://unpkg.com/vue@3.0.5/dist/vue.global.js"></script>
+<script src="https://unpkg.com/vue-router@4"></script>
+<script src="../routes.js"></script>
+<link rel="stylesheet" href="../static/style.css">
+<div id="app">
+  <div class="header">
+    <img class="gif" src="../static/ON2a.gif" alt="gif">
+    <div class="headerTxt">
+        <h2>The Python Programming Blog</h2>
+    </div>
+</div>
 <div class="row">
   <div class="leftcolumn">
     <div class="card">
@@ -24,5 +31,8 @@
     </div>
   </div>
 </div>
-
-{% endblock %}
+<footer>
+  <div class="footer">
+      <h2>Business Email: thePythonBlog@gmail.com</h2>
+  </div>
+</footer>

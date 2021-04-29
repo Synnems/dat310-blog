@@ -1,0 +1,36 @@
+<script src="https://unpkg.com/vue@3.0.5/dist/vue.global.js"></script>
+<script src="https://unpkg.com/vue-router@4"></script>
+<script src="../static/routes.js"></script>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<link rel="stylesheet" href="../static/style.css">
+<div class="header">
+  <img class="gif" src="../static/img/ON2a.gif" alt="gif">
+  <div class="headerTxt">
+      <h2>The Python Programming Blog</h2>
+  </div>
+</div>
+
+
+<div id="app">
+<router-view></router-view> 
+</div>
+
+<footer>
+  <div class="footer">
+    <h2>Business Email: thePythonBlog@gmail.com</h2>
+  </div>
+</footer>
+
+<script>
+  let app = Vue.createApp({
+    data(){
+      return{
+        login: false,
+      }
+    }
+  });
+  app.use(router);
+  app.mount('#app');
+</script>
+
+
