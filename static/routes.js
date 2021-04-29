@@ -71,7 +71,7 @@ let login = {
                         </div>
                     </div>
                 </div>`,  
-        data(){
+        data(){ 
             return{
                 input: {
                     login: false,
@@ -82,8 +82,8 @@ let login = {
         },
         methods: {
             loginMet: async function() {
-                let login = Vue.reactive({username: this.username, password: this.password})
-                let request = await fetch("/login", {
+                let login = Vue.reactive({username: this.username, password: this.password, login: this.login}) //Will be automatically updated when the data changes.
+                let request = await fetch("/login", { //POST request to backend Flask /login
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -91,13 +91,12 @@ let login = {
                     body: JSON.stringify(login)
                 });
 
-                if (request.status == 200){
+                if (request.status == 200){ //200: Response is ready
                     let result = await request.json();
                     this.input = result;
-                    this.$emit("login", this.input.login);
                 }
 
-                if (this.input.login == true){
+                if (this.input.login == true){ //True if login is succsessfull
                     router.push({ path: '/'})
                 }
                 else{
@@ -148,28 +147,21 @@ let register = {
     },
     methods: {
         registerMet: async function() {
-            let register = Vue.reactive({username: this.username, password: this.password})
-            let request = await fetch("/register", {
+            let register = Vue.reactive({username: this.username, password: this.password}) //Will be automatically updated when the data changes.
+            let request = await fetch("/register", { //POST request to backend Flask /register
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(register)
             });
-
-            if (request.status == 200){
+            
+            if (request.status == 200){ //200: Response is ready
                 let result = await request.json();
                 this.inputRegister = result;
-            }
-
-
-            if (this.inputRegister.addSuccess == true){
                 router.push({ path: '/'})
             }
-            else{
-                console.log(this.inputRegister.addSuccess)
-                alert("Error in registering user");
-            }
+
         },
     }    
 }

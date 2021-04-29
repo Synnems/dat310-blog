@@ -18,9 +18,9 @@ body {
   margin: 0 auto;
   left: 0;
   right: 0;
-  top: 20%; /* Adjust this value to move the positioned div up and down */
+  top: 20%; 
   text-align: center;
-  width: 100%; /* Set the width of the positioned div */
+  width: 100%; 
   text-shadow: 1px 1px 1px lightskyblue,
               2px 2px 1px lightskyblue;
   font-size: 200%;
@@ -118,7 +118,7 @@ body {
 }
 
 #menu{
-  width: 100%; /* Set the width of the positioned div */
+  width: 100%; 
   text-shadow: 1px 1px 1px lightskyblue,
               2px 2px 1px lightskyblue;
   font-size: 200%;

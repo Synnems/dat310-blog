@@ -43,7 +43,6 @@ def login():
     if validation:
         conn = get_db()
         user = get_user_by_name(conn,data_login["username"])
-        session['username'] = user['username']
         return json.dumps({'login': True, 'username': user['username']})
     return json.dumps({'login': False})
 

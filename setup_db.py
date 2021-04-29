@@ -1,6 +1,7 @@
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
+#Create user table
 def create_user_table(conn):
     """Create table."""
     cur = conn.cursor()
@@ -21,8 +22,8 @@ def create_user_table(conn):
     finally:
         cur.close()
 
+#Add user to user table, and returns user id in console
 def add_user(conn, username, password, role="user"):
-    """Add user. Returns the new user id"""
     cur = conn.cursor()
     try:
         sql = ("INSERT INTO users (username, password, role) VALUES (?,?,?)")
@@ -37,8 +38,8 @@ def add_user(conn, username, password, role="user"):
     finally:
         cur.close()
 
+#Get users details by name
 def get_user_by_name(conn, username):
-    """Get user details by name."""
     cur = conn.cursor()
     try:
         sql = ("SELECT userid, username, role FROM users WHERE username = ?")
@@ -62,6 +63,7 @@ def get_user_by_name(conn, username):
     finally:
         cur.close()
 
+#Get users details by name, without ID.
 def password_and_user(conn, username):
     sql = ("SELECT password, username FROM users WHERE username = ?")
     try:
