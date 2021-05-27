@@ -7,18 +7,57 @@ def create_user_table(conn):
     cur = conn.cursor()
     try:
         sql = ("CREATE TABLE users ("
-               "userid INTEGER, "
+               "userid INTEGER PRIMARY KEY, "
                "username VARCHAR(20) NOT NULL, "
                "password VARCHAR(120) NOT NULL, "
                "role TEXT, "
-               "PRIMARY KEY(userid) "
                "UNIQUE(username))")
         cur.execute(sql)
         conn.commit
     except sqlite3.Error as err:
         print("Error: {}".format(err))
     else:
-        print("Table created.")
+        print("User table created.")
+    finally:
+        cur.close()
+
+#Create post table
+def create_post_table(conn):
+    """Create table."""
+    cur = conn.cursor()
+    try:
+        sql = ("CREATE TABLE posts ("
+               "postid INTEGER PRIMARY KEY, "
+               "title VARCHAR(120) NOT NULL, "
+               "imgUrl VARCHAR(255), "
+               "content VARCHAR(255))")
+        cur.execute(sql)
+        conn.commit
+    except sqlite3.Error as err:
+        print("Error: {}".format(err))
+    else:
+        print("Post table created.")
+    finally:
+        cur.close()
+
+#Create post table
+def create_comments_table(conn):
+    """Create table."""
+    cur = conn.cursor()
+    try:
+        sql = ("CREATE TABLE comments ("
+               "commentid INTEGER PRIMARY KEY, "
+               "comment VARCHAR(255) NOT NULL,"
+               "postid INTEGER,"
+               "userid INTEGER,"
+               "FOREIGN KEY(postid) REFERENCES posts(postid),"
+                "FOREIGN KEY(userid) REFERENCES users(userid))")
+        cur.execute(sql)
+        conn.commit
+    except sqlite3.Error as err:
+        print("Error: {}".format(err))
+    else:
+        print("Comment table created.")
     finally:
         cur.close()
 
@@ -38,6 +77,102 @@ def add_user(conn, username, password, role="user"):
     finally:
         cur.close()
 
+def add_post(conn, title, imgUrl, content):
+    cur = conn.cursor()
+    try:
+        sql = ('INSERT INTO posts (title, imgUrl, content) VALUES (?,?,?)') 
+        cur.execute(sql, (title, imgUrl, content))
+        conn.commit()
+    except sqlite3.Error as err:
+        print("Error: {}".format(err))
+        return -1
+    else:
+        print("Post {} created with id {}.".format(title, cur.lastrowid))
+        return cur.lastrowid
+    finally:
+        cur.close()
+
+def add_comment(conn, comment,postid): #MÅ FIKSES MED FOREIGN KEYS NÅR LOGIN FUNKER
+    cur = conn.cursor()
+    try:
+        sql = ('INSERT INTO comments (comment, postid) VALUES (?,?)') 
+        cur.execute(sql, (comment, postid))
+        conn.commit()
+    except sqlite3.Error as err:
+        print("Error in add_comment: {}".format(err))
+        return -1
+    else:
+        print("Comment {} added with id {}".format(comment, cur.lastrowid))
+        return cur.lastrowid
+    finally:
+        cur.close()
+
+
+def get_post_by_postid(conn, postid):
+    cur = conn.cursor()
+    try:
+        sql = ("SELECT title, imgUrl, content FROM posts WHERE postid = ?")
+        cur.execute(sql, (postid,))
+        for row in cur:
+            (title,imgUrl,content) = row
+            return {
+                "title": title,
+                "imgUrl": imgUrl,
+                "content": content
+            }
+    except sqlite3.Error as err:
+        print("Error: {}".format(err))
+    finally:
+        cur.close()
+
+def get_posts(conn):
+    cur = conn.cursor()
+    try:
+        sql = ("SELECT * FROM posts")
+        post_list= []
+        cur.execute(sql)
+        curAll = cur.fetchall()
+        for row in curAll:
+            (postid,title,imgUrl,content) = row
+            
+            dicto = {
+                'postid': postid,
+                "title": title,
+                "imgUrl": imgUrl,
+                "content": content,
+                
+            }
+            post_list.append(dicto)
+            post_list.reverse()
+        return post_list
+    except sqlite3.Error as err:
+        print("Error: {}".format(err))
+    finally:
+        cur.close()
+
+def get_comments(conn):
+    cur = conn.cursor()
+    try:
+        sql = ("SELECT commentid, comment, postid FROM comments")
+        comment_list= []
+        cur.execute(sql)
+        curAll = cur.fetchall()
+        for row in curAll:
+            (commentid, comment, postid) = row
+            
+            dicto = {
+                'commentid': commentid,
+                "comment": comment,
+                'postid': postid
+            }
+            comment_list.append(dicto)
+            comment_list.reverse()
+        return comment_list
+    except sqlite3.Error as err:
+        print("Error in get_comments: {}".format(err))
+    finally:
+        cur.close()
+
 #Get users details by name
 def get_user_by_name(conn, username):
     cur = conn.cursor()
@@ -45,10 +180,10 @@ def get_user_by_name(conn, username):
         sql = ("SELECT userid, username, role FROM users WHERE username = ?")
         cur.execute(sql, (username,))
         for row in cur:
-            (id,name,role) = row
+            (userid,name,role) = row
             return {
                 "username": name,
-                "userid": id,
+                "userid": userid,
                 "role": role
             }
         else:
@@ -89,6 +224,10 @@ if __name__ == "__main__":
         print(err)
     else:
         create_user_table(conn)
+        create_post_table(conn)
+        create_comments_table(conn)
         add_user(conn,"johndoe", "Joe123", "admin")
-        add_user(conn,"maryjane","LoveDogs", "admin") 
+        add_user(conn,"maryjane","LoveDogs", "user") 
+        add_post(conn, 'Hello world in Python', 'python_code.jpg', 'To print hello world in python you must write print(Hello world!)')
+        add_post(conn, 'What is python?', 'python2.png', 'Python is a programming language!')
         conn.close()

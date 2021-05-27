@@ -1,1 +1,2 @@
-# dat310-blog testing
+# dat310-blog 
+Python pillow: python3 -m pip install --upgrade Pillow
