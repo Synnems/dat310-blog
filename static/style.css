@@ -120,6 +120,13 @@ body {
   height: 100px;
 }
 
+#delete{
+  height: 2%;
+  width: 2%;
+  font-size: 2%;
+  color: red;
+}
+
 #menu{
   width: 100%; 
   text-shadow: 1px 1px 1px lightskyblue,
@@ -131,6 +138,13 @@ body {
   
 }
 
+.card input {
+  margin-bottom: 20px;
+}
+
+.largeText {
+  font-size: larger;
+}
 
 @media screen and (max-width: 800px) {
   .leftcolumn, .rightcolumn {

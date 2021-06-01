@@ -1,43 +1,43 @@
 let index = {
     template: `
-        <div class="row">
+        <div class="row" :class="{largeText: selectedSize === 'large'}">
             <div class="leftcolumn">
                 <div class="card" v-for="post in filteredList">
                     <router-link :to="{ name: 'index', params: { postid: post.postid }}"><h2> {{post.title}} </h2></router-link>
-                    <h5>Apr 19, 2021</h5>
+                    <h5>{{post.timestamp}}</h5>
                     <img id = "bloggImg" v-bind:src="'/static/img/' + post.imgUrl">
                     <p>{{post.content}}</p>
-                    <div class="commentSection">
-                        <h3>Comments:</h3>
-                        <p>User1: Great post!</p>
-                    </div>
                 </div>
             </div> 
             <div class="rightcolumn">
                 <div class="card">
                     <div class="dropdown">
                         <span id='menu'>Menu ▼</span>
-                        <div id = 'dropdown' class="dropdown-content">
-                            <router-link to='/login' v-if="loggedIn == false"><p>Login</p></router-link>
-                            <router-link to='/login' v-if="loggedIn == true" @click= 'logoutMet()'><p>Logout</p></router-link>
-                            <router-link to='/register' v-if="loggedIn == false"><p>Register</p></router-link>
-                            <router-link to='/post' v-if="loggedIn == true && admin == true"><p>Post</p></router-link>
+                        <div id ='dropdown' class="dropdown-content">
+                            <router-link to='/login' v-if='loggedOut == true'><p>Login</p></router-link>
+                            <router-link to='/login'@click='logoutMet()' v-if='loggedOut == false'><p>Logout</p></router-link>
+                            <router-link to='/register' v-if='loggedOut == true'><p>Register</p></router-link>
+                            <router-link to='/post' v-if='loggedOut == false'><p>Post</p></router-link>
                         </div>
                     </div>
                 </div>
   
                 <div class="card">
                     <div id="searchAndSort">
+                        <p> Search for a title: </p>
                         <input type="text" placeholder="Search title" v-model="search">
-                       <div> 
-                            <input type="radio" id="lightmode" name="lightmode" value="lightmode" v-model='lightmode'checked>
-                            <label for="lightmode">Lightmode</label>
-
-                            <input type="radio" id="darkmode" name="darkmode" value="darkmode" v-model='darkmode'>
-                            <label for="darkmode">Darkmode</label>
-                        </div>
                     </div>
+                </div>
 
+                <div class= 'card'> 
+                        <p> Text size: </p>
+                    <label>
+                        <input type="radio" id="medium" name="mode" value="medium" v-model="selectedSize" checked> Medium
+                    </label>
+
+                    <label>
+                        <input type="radio" id="large" name="mode" value="large" v-model="selectedSize"> Large
+                    </label>
                 </div>
   
                 <div class="card">
@@ -51,9 +51,10 @@ let index = {
          data(){ 
             return{
                 posts: [],
-                loggedIn: false,
-                admin: false,
-                search: ''
+                search: '',
+                textSize: 'medium',
+                selectedSize: 'medium',
+                loggedOut: true
             }
         },
         created: async function(){
@@ -64,24 +65,25 @@ let index = {
                 this.posts = result;
             }
 
-            let myValue = localStorage.getItem('User');
-                if (myValue != null){
-                    this.loggedIn = true
-                }
+            let request2 = await fetch('/check_user')
+            if (request2.status == 200){
+                let result2 = await request2.json();
+                this.loggedOut = result2.loggedOut
+            }
 
-            let roleValue = localStorage.getItem('Role');
-                if (roleValue == 'admin'){
-                    this.admin = true
-                }
-
-         },
+        },
         methods: {
              logoutMet: async function(){
-                localStorage.removeItem('User');
-                localStorage.removeItem('Role');
-                this.loggedIn = false;
-                this.admin = false;
+                localStorage.clear()
+                let request = await fetch("/logout")
+
+                if (request.status == 200){ //200: Response is ready
+                    let result = await request.json();
+                    this.loggedOut = result.loggedOut;
+                }
+                router.push({path: '/login'})
             },
+            
         },
         computed: {
             filteredList() {
@@ -112,11 +114,13 @@ let login = {
                         <div class="card">
                             <h4>Back to <router-link to='/'>index</router-link></h4>
                         </div>
+
                         <div class="card">
                             <h2>About Me</h2>
                             <img id="aboutImg" src="static/img/bloggBilde.jpg" alt="ProgrammingGirl">
                             <p>My name is Synne and I am a 21 years old Computer Science student. In my sparetime I enjoy coding, especially in Python. In this blog I am going to to share my journey in becomming a better programmer.</p>
                         </div>
+                        
                     </div>
                 </div>`,  
         data(){ 
@@ -125,15 +129,18 @@ let login = {
                     login: false,
                     username: '',
                     password: '',
-                    role: ''
+                    role: '',
                 }
             }
         },
         created: async function(){
-            let myValue = localStorage.getItem('User');
-                if (myValue != null){
+            let request2 = await fetch('/check_user')
+            if (request2.status == 200){
+                let result2 = await request2.json();
+                if (result2.loggedOut == false){
                     router.push({path: '/'})
                 }
+            }
         },
         methods: {
             loginMet: async function() {
@@ -152,11 +159,12 @@ let login = {
                 }
 
                 if (this.input.login == true){ //True if login is succsessfull
-                    localStorage.setItem('User', this.username);
-                    localStorage.setItem('Role', this.input.role)
+                    localStorage.setItem('user', this.username);
+                    localStorage.setItem('role', this.input.role)
                     router.push({ path: '/'})
                 }
                 else{
+                    console.log(this.input.login)
                     alert("The username and/or password is incorrect");
                 }
             },
@@ -190,6 +198,7 @@ let register = {
             <div class="card">
                 <h4>Back to <router-link to='/'>index</router-link></h4>
             </div>
+            
             <div class="card">
                 <h2>About Me</h2>
                 <img id="aboutImg" src="static/img/bloggBilde.jpg" alt="ProgrammingGirl">
@@ -204,13 +213,17 @@ let register = {
                 addSuccess: false,
                 username: '',
                 password: '',
+                id: ''
             }
         }
     },
     created: async function(){
-        let myValue = localStorage.getItem('User');
-            if (myValue != null){
-                router.push({path: '/'})
+        let request2 = await fetch('/check_user')
+            if (request2.status == 200){
+                let result2 = await request2.json();
+                if (result2.loggedOut == false){
+                    router.push({path: '/'})
+                }
             }
     },
     methods: {
@@ -227,9 +240,20 @@ let register = {
             if (request.status == 200){ //200: Response is ready
                 let result = await request.json();
                 this.inputRegister = result;
-                router.push({ path: '/login'})
+                let usernamelength = this.inputRegister.username.length;
+                if (this.inputRegister.addSuccess == true){
+                    router.push({ path: '/login'})
+                } 
+                else if (this.inputRegister.id == true) {
+                    alert("This username is already taken.")
+                }
+                else if (usernamelength < 4){
+                    alert('Username must be at least 4 characters.')
+                }
+                else if (this.inputRegister.password == ''){
+                    alert('Please enter a password.')
+                }
             }
-
         },
     }    
 }
@@ -244,7 +268,7 @@ let post = {
                     <input type="text" name="title" placeholder="Title" v-model = 'title'><br><br>
                     <textarea id="textfield" name="textfield" rows="10" cols="100" v-model = 'content'></textarea>
                 </div>
-                <input type='file'  accept="image/png, image/jpeg" v-model= 'imgUrl' @change='onFileChange'>
+                <input type='file' accept="image/png, image/jpeg" @change='onFileChange'>
                 <button @click= 'onUpload'>Submit</button>
             </div>
         </div>
@@ -267,25 +291,35 @@ let post = {
                 imgUrl: null,
                 title: '',
                 content: '',
+                filedata: null,
+                url: '',
+                admin: false
             }
         }
     },
     created: async function(){
-        let myValue = localStorage.getItem('User');
-        let roleValue = localStorage.getItem('Role')
-            if (myValue == null || roleValue != 'admin'){
-                router.push({path: '/'})
+            let request3 = await fetch('/check_role')
+            if (request3.status == 200){
+                let result3 = await request3.json();
+                if (result3.admin == false){
+                    router.push({path: '/'})
+                }
             }
+        },
 
-            
-    },
     methods: {
         onFileChange(event) {
-            var filedata = event.target.files[0];
-            this.imgUrl = filedata.name;
+            this.filedata = event.target.files[0];
+            this.imgUrl = this.filedata.name;
+            const reader = new FileReader()
+            reader.addEventListener('load', () =>{
+                this.url = reader.result;
+            });
+            reader.readAsDataURL(this.filedata)
+
         },
         onUpload: async function(){
-            let post = Vue.reactive({imgUrl: this.imgUrl, title: this.title, content: this.content, posted: this.posted}) //Will be automatically updated when the data changes.
+            let post = Vue.reactive({imgUrl: this.imgUrl, title: this.title, content: this.content, posted: this.posted, filedata: this.url}) //Will be automatically updated when the data changes.
             let request = await fetch("/post", { //POST request to backend Flask /post
                 method: "POST",
                 headers: {
@@ -297,7 +331,6 @@ let post = {
             if (request.status == 200){ //200: Response is ready
                 let result = await request.json();
                 this.inputPost = result;
-                console.log(result)
                 router.push({ path: '/'})
             }
 
@@ -317,7 +350,7 @@ let singlePost = {
                     <p>{{ post['content'] }}</p>
                     <div class="commentSection">
                         <h3>Comments:</h3>
-                        <p v-for = 'comment in comments' ><b>Username: </b> {{comment.comment}}</p>
+                        <p v-for = 'comment in comments'><b> {{comment.username}}: </b> {{comment.comment}}</p>
                     </div>
                 </div>
             </div> 
@@ -326,15 +359,15 @@ let singlePost = {
                     <h4>Back to <router-link to='/'>index</router-link></h4>
                 </div>
   
-                <div class="card" v-if='loggedIn'>
+                <div class="card" v-if='loggedOut == false'>
                     <div id="comments">
                         <h5> Post a comment here: </h5>
                         <textarea name="comment" id="comment" rows="10" tabindex="4"  required="required" v-model = 'comment'></textarea>
-                        <button @click = 'onUpload(); postCmt()'> Submit comment </button>
+                        <button @click = 'onUpload(); postCmt(); getCmt()'> Submit comment </button>
                     </div>
                 </div>
 
-                <div class="card" v-if='loggedIn == false'>
+                <div class="card" v-if='loggedOut'>
                     <h5> <router-link to='/login'>Log in</router-link> to write a comment! </h5>
                 </div>
             </div>
@@ -346,13 +379,14 @@ let singlePost = {
                 postid: '',
                 comment: '',
                 comments: [],
-                loggedIn: '',
-
+                loggedOut: true,
+                userid: ''
             }
         },
         
         created: async function(){
             let postid = Vue.reactive(this.$route.params)
+            this.postid = this.$route.params
             let request = await fetch("/get_post_postid", { //POST request to backend Flask /post
                 method: "POST",
                 headers: {
@@ -360,32 +394,35 @@ let singlePost = {
                 },
                 body: JSON.stringify(postid)
             });
-
             if (request.status == 200){ //200: Response is ready
                 let result = await request.json();
                 this.post = result;
             }
 
-            let request2 = await fetch("/comments_get")
-    
-            if (request2.status == 200){ //200: Response is ready
-                let result2 = await request2.json();
-                this.comments = result2;
-                console.log(this.comments)
-            }
 
-            let myValue = localStorage.getItem('User');
-            if (myValue == null){
-                this.loggedIn = false
+            let postid3 = ({'postid': this.postid})
+            let request3 = await fetch("/comments_get", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(postid3)
+            });
+            if (request3.status = 200){
+                let result3 = await request3.json();
+                this.comments = result3;
             }
-            else{
-                this.loggedIn = true
-            }  
+            let request4 = await fetch('/check_user')
+            if (request4.status == 200){
+                let result4 = await request4.json();
+                this.loggedOut = result4.loggedOut;
+            }
             
         },
         methods: {
             onUpload: async function(){
-                let post = Vue.reactive({comment: this.comment, postid: this.postid}) //Will be automatically updated when the data changes.
+                this.username = localStorage.getItem('user');
+                let post = Vue.reactive({comment: this.comment, postid: this.postid, username: this.username}) //Will be automatically updated when the data changes.
                 let request = await fetch("/comment", { //POST request to backend Flask /post
                     method: "POST",
                     headers: {
@@ -393,18 +430,33 @@ let singlePost = {
                     },
                     body: JSON.stringify(post)
                 });
+
                 
     
             },
-            postCmt: async function(){
-                let request = await fetch("/comments_get")
-    
+            postCmt: async function(){ 
+                let postid2 = ({'postid': this.postid})
+                let request = await fetch('/comments_get', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(postid2)
+                });
+
                 if (request.status == 200){ //200: Response is ready
                     let result = await request.json();
                     this.comments = result;
                 }
             },
-            
+
+            getCmt: async function(){ //Denne er for at når man trykker på post så skal man fortsette å displaye alle kommentarene.
+                let request = await fetch("/comments_get")
+    
+                if (request.status == 200){ //200: Response is ready
+                    let result = await request.json();
+                }
+            },
         }
 }
 
