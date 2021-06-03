@@ -2,7 +2,7 @@ from datetime import datetime
 
 from setup_db import *
 import json
-from flask import Flask, request, g, session, abort
+from flask import Flask, request, g, session
 
 from io import BytesIO
 import base64
@@ -31,16 +31,16 @@ def index(path):
     return app.send_static_file('index.html')
 
 
-
-def valid_login(username, password):
+#Valid login check with hashing of passwords
+def valid_login(username, password): 
     conn = get_db()
     hash = get_hash_for_login(conn, username)
     if hash != None:
-        return check_password_hash(hash, password) #Denne returnerer false ?
+        return check_password_hash(hash, password)
     return False
     
 
-#Login backend
+#Login setting session if validation when logging in
 @app.route('/login', methods=['POST'])
 def login():
     data_login = request.get_json()
@@ -53,6 +53,7 @@ def login():
         return json.dumps({'login': True, 'username': user['username'], 'role': user['role']})
     return json.dumps({'login': False})
 
+#Validation when registering
 def valid_register(username, password):
     conn = get_db()
     id = check_users(conn, username)
@@ -65,7 +66,7 @@ def valid_register(username, password):
     else:
         return True
 
-#Register backend
+#Register add user to database if validation is true.
 @app.route("/register", methods=["POST"])
 def register():
     data_register = request.get_json()
@@ -79,7 +80,7 @@ def register():
     else:
         return json.dumps({'addSuccess': False,'username': data_register['username'], 'password': data_register['password'], 'id': id})
 
-#Post backend
+#Post with admin auth. If true, add image to path and add post to database.
 @app.route('/post', methods=['POST'])
 def post():
     if session.get('role', None) == 'admin': 
@@ -97,12 +98,14 @@ def post():
     else:
         return json.dumps({'posted': False})
 
+#Post to index
 @app.route('/get_post', methods=['GET', 'POST'])
 def get_post():
     conn=get_db()
     getpost = get_posts(conn)
     return json.dumps(getpost)
 
+#Post for index/postid
 @app.route('/get_post_postid', methods=['POST'])
 def get_post_postid():
     conn=get_db()
@@ -110,34 +113,43 @@ def get_post_postid():
     getpost = get_post_by_postid(conn, data_postid['postid'])
     return json.dumps(getpost)
 
+#Add comment to database with auth for local storage security problems.
 @app.route('/comment', methods=['POST'])
 def comment():
     data_comment = request.get_json()
     conn=get_db()
-    add_comment(conn, data_comment['comment'], data_comment['postid']['postid'], data_comment['username'])
+    if session.get('user') == data_comment['username']:
+        add_comment(conn, data_comment['comment'], data_comment['postid']['postid'], data_comment['username'])
+        return json.dumps({'noHacking': True})
+    else:
+        return json.dumps({'noHacking': False})
+
+#Deletes post and the belonging commnts at click if admin
+@app.route('/delete_post', methods=['POST'])
+def delete_post():
+    postid = request.get_json()
+    conn = get_db()
+    delete_post_by_postid(conn, postid['postid'])
+    delete_comment_by_postid(conn, postid['postid'])
     return ''
 
-@app.route('/comments_get', methods=['GET', 'POST'])
+#Splits comments by posts with postid.
+@app.route('/comments_get', methods=['POST'])
 def comments_get():
-    if request.method=="GET":
-        conn = get_db()
-        comments = get_comments(conn) 
-        return json.dumps(comments)
-    if request.method=="POST": #DENNE SKAL OGSÅ RETURNERE NAVN
+    if request.method=="POST": 
         conn = get_db()
         data = request.get_json()
         getcomments = get_comment_by_postid(conn, data['postid']['postid'])
         return json.dumps(getcomments)
     
-
+#Logout remove backend session
 @app.route('/logout', methods=['GET'])
 def logout():
-    #print(session.get("user")) = Johndoe
     session.pop('user',None)
     session.pop('role', None)
-    #print(session.get("user")) = None
     return json.dumps({'loggedOut': True})
 
+#Checks if user is logged in with backend session
 @app.route('/check_user', methods=['GET'])
 def check_user():
     if session.get('user') == None:
@@ -145,7 +157,7 @@ def check_user():
     else:
         return json.dumps({'loggedOut': False})
 
-
+#Checks role with backend session
 @app.route('/check_role', methods=['GET'])
 def check_role():
     if session.get('user') == None:
@@ -154,7 +166,6 @@ def check_role():
         return json.dumps({'admin': True})
     if session.get('role') == 'user':
         return json.dumps({'admin': False})
-
 
 if __name__ == '__main__':
     app.run(debug=True)

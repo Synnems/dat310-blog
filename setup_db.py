@@ -1,5 +1,4 @@
 import sqlite3
-from typing import Dict
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -80,19 +79,19 @@ def add_user(conn, username, password, role="user"):
     finally:
         cur.close()
 
+#Checks if username exists in table
 def check_users(conn, username):
     cur = conn.cursor()
     sql = ("SELECT username FROM Users WHERE username = ?")
     cur.execute(sql, (username,))
     data=cur.fetchall()
-    print(data)
     if len(data) == 0:
         return False #No one uses this name
     else:
         return True #Name is used
         
 
-
+#Add post to table
 def add_post(conn, title, imgUrl, content, datetime):
     cur = conn.cursor()
     try:
@@ -108,7 +107,39 @@ def add_post(conn, title, imgUrl, content, datetime):
     finally:
         cur.close()
 
-def add_comment(conn, comment, postid, username): #MÅ FIKSES MED FOREIGN KEYS NÅR LOGIN FUNKER
+#Admin delete post with spesific postid
+def delete_post_by_postid(conn, postid):
+    try:
+        sql = 'DELETE FROM posts WHERE postid=?'
+        cur = conn.cursor()
+        cur.execute(sql, (postid,))
+        conn.commit()
+    except sqlite3.Error as err:
+        print("Error in delete post: {}".format(err))
+        return -1
+    else:
+        print("Post {} deletet with id {}.")
+        return cur.lastrowid
+    finally:
+        cur.close()
+
+#When post is deletet, the beloning comments must also be deleted.
+def delete_comment_by_postid(conn, postid):
+    cur = conn.cursor()
+    try:
+        sql = ('DELETE FROM Comments WHERE postid = ?')
+        cur.execute(sql, (postid,))
+        conn.commit()
+    except sqlite3.Error as err:
+        print("Error in del comment by postid: {}".format(err))
+        return -1
+    else:
+        return cur.lastrowid
+    finally:
+        cur.close()
+
+#Add comment with postid and username to find beloning post, and post comment with belonging username
+def add_comment(conn, comment, postid, username): 
     cur = conn.cursor()
     try:
         sql = ('INSERT INTO comments (comment, postid, username) VALUES (?, ?,?)') 
@@ -123,22 +154,8 @@ def add_comment(conn, comment, postid, username): #MÅ FIKSES MED FOREIGN KEYS N
     finally:
         cur.close()
 
-def delete_comment_by_commentid(conn, commentid):
-    cur = conn.cursor()
-    try:
-        sql = ('DELETE FROM Comments WHERE commentid = ?')
-        cur.execute(sql, (commentid,))
-        conn.commit()
-    except sqlite3.Error as err:
-        print("Error in del comment by id: {}".format(err))
-        return -1
-    else:
-        return cur.lastrowid
-    finally:
-        cur.close()
 
-
-
+#To show correct post with correct info on title click
 def get_post_by_postid(conn, postid):
     cur = conn.cursor()
     try:
@@ -156,6 +173,7 @@ def get_post_by_postid(conn, postid):
     finally:
         cur.close()
 
+#Get the belonging comments
 def get_comment_by_postid(conn, postid):
     cur = conn.cursor()
     comment_list= []
@@ -177,10 +195,11 @@ def get_comment_by_postid(conn, postid):
     finally:
         cur.close()
 
+#Get all posts to display in main index
 def get_posts(conn):
     cur = conn.cursor()
     try:
-        sql = ("SELECT * FROM posts")
+        sql = ("SELECT * FROM posts") 
         post_list= []
         cur.execute(sql)
         curAll = cur.fetchall()
@@ -203,6 +222,7 @@ def get_posts(conn):
     finally:
         cur.close()
 
+#Get all comments
 def get_comments(conn):
     cur = conn.cursor()
     try:
@@ -227,7 +247,7 @@ def get_comments(conn):
     finally:
         cur.close()
 
-#Get users details by name
+#Get users details by name. Used in login
 def get_user_by_name(conn, username):
     cur = conn.cursor()
     try:
@@ -252,24 +272,6 @@ def get_user_by_name(conn, username):
     finally:
         cur.close()
 
-#Get users details by name, without ID.
-def password_and_user(conn, username):
-    sql = ("SELECT password, username FROM users WHERE username = ?")
-    try:
-        cur = conn.cursor()
-        cur.execute(sql, (username,))
-        for i in cur:
-            password, user = i
-            return{
-                'username': username,
-                'password': password,
-            }
-        else:
-            return None
-    except sqlite3.Error as err:
-        print('Error {}'.format(err))
-    finally:
-        cur.close()
 
 def get_hash_for_login(conn, username):
     """Get user details from id."""
